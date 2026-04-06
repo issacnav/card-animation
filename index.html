@@ -12,7 +12,7 @@
 </script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500&family=Plus+Jakarta+Sans:wght@400;500;600&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="card-stack-hero/dist-embed/card-stack.css" />
 <style>
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
@@ -24,9 +24,9 @@
   --green:  #52EF96;
   --dark:   #181818;
   --bg:     #0B0B0B;
-  /* Card typography: Signifier (serif titles) + system UI (body / links) */
+  /* Card typography: Signifier (titles) + Plus Jakarta Sans (body — matches interfacecraft.dev cards) */
   --font-card-serif: 'Signifier', Georgia, 'Times New Roman', serif;
-  --font-card-sans: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  --font-card-sans: 'Plus Jakarta Sans', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
   /*
    * Card shell in rem (16px root): same CSS pixel size as 228×288 / 360×464 at 1×,
    * but scales with root font-size & browser zoom like rem-based reference sites.
@@ -52,7 +52,7 @@
 
 html {
   width: 100%;
-  height: 100%;
+  min-height: 100%;
   /* Anchor rem; user “font size” / zoom still scales rems in most browsers */
   font-size: 100%;
   -webkit-text-size-adjust: 100%;
@@ -76,53 +76,27 @@ body {
   user-select: none;
 }
 
-/* ── Main: hero + cards vertically centered as one block ─ */
+/* ── Main: card stack centered in viewport (horizontal + vertical) ─ */
 .main {
   flex: 1;
   display: flex;
   flex-direction: column;
   justify-content: center;
-  align-items: stretch;
+  align-items: center;
   gap: clamp(12px, 3vh, 32px);
-  min-height: 0;
   width: 100%;
+  min-height: 0;
 }
 
-/* ── Hero ───────────────────────────────── */
-.hero {
-  text-align: center;
-  padding: clamp(16px, 2.5vh, 28px) 16px clamp(8px, 1.5vh, 14px);
-  flex-shrink: 0;
-  position: relative;
-  z-index: 10;
-}
-.hero-rule { width: 30px; height: 1px; background: rgba(255,255,255,0.22); margin: 0 auto 20px; }
-.hero h1 {
-  font-family: 'DM Serif Display', serif;
-  font-size: clamp(36px, 4.2vw, 50px);
-  font-weight: 400;
-  letter-spacing: -0.25px;
-  line-height: 1.08;
-  color: #fff;
-  margin-bottom: 14px;
-}
-.hero p {
-  font-size: 15px;
-  font-weight: 300;
-  color: rgba(255,255,255,0.42);
-  line-height: 1.65;
-  max-width: 285px;
-  margin: 0 auto;
-}
-
-/* ── Stage (sits under hero; main centers both together) ─ */
+/* ── Stage ─ */
 .stage-wrap {
   flex: 0 0 auto;
   display: flex;
   align-items: center;
   justify-content: center;
   width: 100%;
-  padding: 0 16px 24px;
+  max-width: 100%;
+  padding: 16px;
   position: relative;
   z-index: 1;
 }
@@ -137,7 +111,7 @@ body {
   position: relative;
   width: calc(940px * var(--s));
   height: calc(575px * var(--s));
-  margin: 20px auto 0;
+  margin: 0 auto;
   flex-shrink: 0;
   overflow: visible;
 }
@@ -223,6 +197,12 @@ body {
   --art-w-idle: 12.25rem;
   --art-strip-h: 7.5rem;
   --art-strip-h-selected: 15.3125rem;
+  /* Fixed “design” size for the animated graphic (expanded card). Canvas draws at this size always. */
+  --art-slot-w: calc(var(--card-w-expanded) - 2 * var(--art-inset));
+  --art-slot-h: var(--art-strip-h-selected);
+  /* Non-uniform scale maps idle strip → slot (matches old layout proportions). */
+  --art-sx-idle: calc(var(--art-w-idle) / (var(--card-w-expanded) - 2 * var(--art-inset)));
+  --art-sy-idle: calc(var(--art-strip-h) / var(--art-strip-h-selected));
   /* Fixed rem width — avoid min(100%,…) here: % basis on .cw is often 0 → width collapsed */
   width: var(--card-w);
   height: var(--card-h);
@@ -290,7 +270,24 @@ body {
   border-radius: 0.625rem;
   clip-path: none;
 }
-.artViewport canvas {
+/* Inner layout: fixed slot; scale for idle so canvas buffer size does not animate. */
+.artCanvasHost {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: var(--art-slot-w);
+  height: var(--art-slot-h);
+  transform-origin: top left;
+  transition: transform 0.52s cubic-bezier(0.34, 1.56, 0.64, 1);
+  will-change: transform;
+}
+.cw:not(.fan-selected) .card .artCanvasHost {
+  transform: scale(var(--art-sx-idle), var(--art-sy-idle));
+}
+.cw.fan-selected .card .artCanvasHost {
+  transform: scale(1, 1);
+}
+.artCanvasHost canvas {
   display: block;
   width: 100%;
   height: 100%;
@@ -419,10 +416,6 @@ body {
 <body>
 
 <main class="main">
-  <div class="hero">
-    <div class="hero-rule"></div>
-  </div>
-
   <div class="stage-wrap">
     <div class="stage-scale">
       <div class="stage" id="stage"></div>
@@ -430,7 +423,7 @@ body {
   </div>
 
   <!-- Stack: React + Framer Motion + Tailwind (source: card-stack-hero/src) -->
-  <div id="card-stack-root" class="w-full flex-shrink-0"></div>
+  <div id="card-stack-root" class="flex w-full max-w-full flex-shrink-0 flex-col items-center justify-center"></div>
 </main>
 
 <script type="module" src="card-stack-hero/dist-embed/card-stack.js"></script>
@@ -856,7 +849,6 @@ function drawGraphic(type, canvas, cssW, cssH, t, card) {
 
 // ── Build fan cards (in-place focus only — no modal / overlay) ─
 const stage = document.getElementById('stage');
-const stageWrap = document.querySelector('.stage-wrap');
 const wrappers = [];
 const cardCanvases = [];
 
@@ -915,8 +907,11 @@ CARDS.forEach((c, i) => {
   const artVp = document.createElement('div');
   artVp.className = 'artViewport';
   artVp.setAttribute('aria-hidden', 'true');
+  const artHost = document.createElement('div');
+  artHost.className = 'artCanvasHost';
   const cv = document.createElement('canvas');
-  artVp.appendChild(cv);
+  artHost.appendChild(cv);
+  artVp.appendChild(artHost);
 
   const content = document.createElement('div');
   content.className = 'cardContent';
@@ -944,13 +939,6 @@ CARDS.forEach((c, i) => {
   card.appendChild(content);
   card.appendChild(detail);
 
-  const ro = new ResizeObserver(() => {
-    const w = Math.max(1, Math.round(artVp.clientWidth));
-    const h = Math.max(1, Math.round(artVp.clientHeight));
-    setupCanvas(cv, w, h);
-  });
-  ro.observe(artVp);
-
   wrap.appendChild(card);
   stage.appendChild(wrap);
   wrappers.push(wrap);
@@ -975,15 +963,14 @@ CARDS.forEach((c, i) => {
   });
 });
 
-if (stageWrap) {
-  document.addEventListener('click', (ev) => {
-    if (selectedFanIndex === null) return;
-    if (!stageWrap.contains(ev.target)) {
-      selectedFanIndex = null;
-      applyFanSelection();
-    }
-  });
-}
+document.addEventListener('pointerdown', (ev) => {
+  if (selectedFanIndex === null) return;
+  const t = ev.target;
+  if (!(t instanceof Element)) return;
+  if (t.closest('.cw')) return;
+  selectedFanIndex = null;
+  applyFanSelection();
+}, true);
 
 document.addEventListener('keydown', (ev) => {
   if (ev.key === 'Escape' && selectedFanIndex !== null) {

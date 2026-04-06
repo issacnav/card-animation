@@ -26341,8 +26341,8 @@ function DV({ className: o }) {
   Ge.useEffect(() => {
     const Y = (K) => {
       if (y === null) return;
-      const q = R.current;
-      q && (q.contains(K.target) || T(null));
+      const q = K.target;
+      q instanceof Element && (q.closest(".card-stack-shell") || T(null));
     };
     return document.addEventListener("pointerdown", Y, !0), () => document.removeEventListener("pointerdown", Y, !0);
   }, [y]), Ge.useEffect(() => {
@@ -26355,7 +26355,7 @@ function DV({ className: o }) {
   return /* @__PURE__ */ lr.jsxs(
     "section",
     {
-      className: `flex w-full flex-shrink-0 flex-col items-center gap-3 px-4 pb-12 pt-6 select-none ${o ?? ""}`,
+      className: `flex w-full flex-shrink-0 flex-col items-center justify-center gap-3 px-4 py-8 select-none ${o ?? ""}`,
       "aria-labelledby": "card-stack-heading",
       children: [
         /* @__PURE__ */ lr.jsx(

@@ -94,11 +94,10 @@ export function CardStackStage({ className }: CardStackStageProps) {
   useEffect(() => {
     const onDocPointerDown = (ev: MouseEvent | PointerEvent) => {
       if (selectedIndex === null) return
-      const root = frameRef.current
-      if (!root) return
-      if (!root.contains(ev.target as Node)) {
-        setSelectedIndex(null)
-      }
+      const el = ev.target
+      if (!(el instanceof Element)) return
+      if (el.closest('.card-stack-shell')) return
+      setSelectedIndex(null)
     }
     document.addEventListener('pointerdown', onDocPointerDown, true)
     return () => document.removeEventListener('pointerdown', onDocPointerDown, true)
@@ -116,7 +115,7 @@ export function CardStackStage({ className }: CardStackStageProps) {
 
   return (
     <section
-      className={`flex w-full flex-shrink-0 flex-col items-center gap-3 px-4 pb-12 pt-6 select-none ${className ?? ''}`}
+      className={`flex w-full flex-shrink-0 flex-col items-center justify-center gap-3 px-4 py-8 select-none ${className ?? ''}`}
       aria-labelledby="card-stack-heading"
     >
       <h2

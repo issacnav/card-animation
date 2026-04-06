@@ -9,6 +9,7 @@ export default {
       fontFamily: {
         card: ['Signifier', 'Georgia', 'serif'],
         'card-sans': [
+          'Plus Jakarta Sans',
           'system-ui',
           '-apple-system',
           'BlinkMacSystemFont',
