@@ -47,22 +47,20 @@ const STAGE_PADDING_DEFAULT = 44
 const STAGE_PADDING_NARROW = 22
 
 /**
- * Idle fan — reference: ~30–40px between **left edges** on 228px cards ⇒ ~30px step
- * between card centers (70–80% overlap). Rotations: left ~-8°, right ~+6–8°.
- * Pair with `transform-origin: bottom center` on the motion layer.
+ * Idle fan — matches reference: pivot from top so bottoms spread; left CCW → right CW.
+ * Uneven x offsets (slightly wider gap toward the right); rotations ~-7° … +9°.
+ * Pair with `transform-origin: top center` on the motion layer when idle.
  */
-const FAN_X_STEP_PX = 30
-
 export const LAYOUT_DEFAULT: LayoutProfile = {
   cardWidth: CARD_WIDTH_PX,
   cardHeight: CARD_HEIGHT_PX,
   stagePadding: STAGE_PADDING_DEFAULT,
   restStack: [
-    { x: -FAN_X_STEP_PX * 2, y: 4, rotate: -8, scale: 1, zIndex: 1 },
-    { x: -FAN_X_STEP_PX, y: 0, rotate: 3, scale: 1, zIndex: 2 },
-    { x: 0, y: -2, rotate: -2, scale: 1, zIndex: 3 },
-    { x: FAN_X_STEP_PX, y: 0, rotate: 2, scale: 1, zIndex: 4 },
-    { x: FAN_X_STEP_PX * 2, y: -4, rotate: 7, scale: 1, zIndex: 5 },
+    { x: -82, y: 6, rotate: -7, scale: 1, zIndex: 1 },
+    { x: -40, y: 2, rotate: -3, scale: 1, zIndex: 2 },
+    { x: 0, y: -2, rotate: 0, scale: 1, zIndex: 3 },
+    { x: 42, y: 2, rotate: 4, scale: 1, zIndex: 4 },
+    { x: 88, y: 6, rotate: 9, scale: 1, zIndex: 5 },
   ],
   splitLayout: {
     active: { x: 0, y: -158, rotate: 0, scale: 1.38 },
@@ -76,18 +74,15 @@ export const LAYOUT_DEFAULT: LayoutProfile = {
   },
 }
 
-/** Phones: proportional step so the deck stays dense */
-const FAN_X_STEP_NARROW_PX = 18
-
 export const LAYOUT_NARROW: LayoutProfile = {
   ...LAYOUT_DEFAULT,
   stagePadding: STAGE_PADDING_NARROW,
   restStack: [
-    { x: -FAN_X_STEP_NARROW_PX * 2, y: 3, rotate: -8, scale: 1, zIndex: 1 },
-    { x: -FAN_X_STEP_NARROW_PX, y: 0, rotate: 3, scale: 1, zIndex: 2 },
-    { x: 0, y: -2, rotate: -2, scale: 1, zIndex: 3 },
-    { x: FAN_X_STEP_NARROW_PX, y: 0, rotate: 2, scale: 1, zIndex: 4 },
-    { x: FAN_X_STEP_NARROW_PX * 2, y: -3, rotate: 7, scale: 1, zIndex: 5 },
+    { x: -54, y: 4, rotate: -7, scale: 1, zIndex: 1 },
+    { x: -26, y: 1, rotate: -3, scale: 1, zIndex: 2 },
+    { x: 0, y: -1, rotate: 0, scale: 1, zIndex: 3 },
+    { x: 28, y: 1, rotate: 4, scale: 1, zIndex: 4 },
+    { x: 58, y: 4, rotate: 9, scale: 1, zIndex: 5 },
   ],
   splitLayout: {
     active: { x: 0, y: -118, rotate: 0, scale: 1.2 },

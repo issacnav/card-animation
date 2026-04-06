@@ -171,8 +171,8 @@ export function CardStackStage({ className }: CardStackStageProps) {
                     height: ch,
                     marginLeft: -cw / 2,
                     marginTop: -ch / 2,
-                    // Reference: fan pivots from bottom so tops spread; hero uses center for clean scale
-                    transformOrigin: hasSelection ? 'center center' : '50% 100%',
+                    // Reference: fan pivots from top so bottoms spread wider (hero uses center for scale)
+                    transformOrigin: hasSelection ? 'center center' : '50% 0%',
                     willChange: 'transform',
                     zIndex: s.zIndex,
                   }}

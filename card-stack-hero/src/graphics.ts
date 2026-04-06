@@ -42,6 +42,11 @@ function drawRect(
   ctx.globalAlpha = a
 }
 
+/** Uniform inset for all graphic types so artwork aligns in the card strip. */
+function artFramePadding(w: number, h: number): number {
+  return Math.max(2, Math.min(14, Math.min(w, h) * 0.04))
+}
+
 function createSeededRandom(seed: number) {
   let t = seed >>> 0
   return function () {
@@ -107,20 +112,22 @@ const PRESETS: Record<
   GraphicId,
   Record<string, string | number | boolean | undefined>
 > = {
+  /* 52 bars: even = static, odd = wave; one rect per column */
   waveformBars: {
     waveType: 'sine',
     waveAmplitude: 0.4,
     waveFrequency: 0.9,
     phaseOffset: 0.4,
-    columns: 40,
+    columns: 52,
     barWidth: 2,
-    gap: 3,
+    gap: 1,
+    barThicknessScale: 0.5,
     minHeight: 1,
-    maxHeightFrac: 0.82,
+    maxHeightFrac: 0.78,
     anchorInterval: 2,
     topAligned: true,
     stagger: 0.1,
-    verticalShift: 4,
+    verticalShift: 0,
     shiftCurve: 3,
     shiftOrigin: 0.99,
     speed: 0.1,
@@ -182,24 +189,42 @@ function drawWaveformBars(
   w: number,
   h: number,
   t: number,
-  seed: number,
+  _seed: number,
   fg: string,
   bg: string,
   o: Record<string, number | string | boolean>,
 ) {
-  const rnd = createSeededRandom(seed)
   clearCanvas(ctx, w, h, bg)
-  const vPad = Math.max(2, h * 0.04)
+  const pad = artFramePadding(w, h)
+  const vPad = pad
+  const innerW = Math.max(1, w - 2 * pad)
   const innerH = Math.max(1, h - 2 * vPad)
   const F = (o.maxHeightFrac as number) * innerH
-  const barW = o.barWidth as number
+  let barW = o.barWidth as number
   const gapBase = o.gap as number
-  const cols = Math.min(
-    o.columns as number,
-    Math.max(8, Math.floor((w + gapBase) / (barW + gapBase))),
-  )
-  const gapX = cols > 1 ? (w - cols * barW) / (cols - 1) : gapBase
-  const offsetX = 0
+  const targetCols = o.columns as number
+  let cols: number
+  let gapX: number
+  if (targetCols === 52) {
+    cols = 52
+    gapX = Math.max(0, Math.min(gapBase, 1))
+    barW = (innerW - (cols - 1) * gapX) / cols
+    if (barW < 0.4) {
+      gapX = 0
+      barW = innerW / cols
+    }
+  } else {
+    cols = Math.min(targetCols, Math.max(8, Math.floor((innerW + gapBase) / (barW + gapBase))))
+    gapX = cols > 1 ? (innerW - cols * barW) / (cols - 1) : gapBase
+  }
+  const offsetX = pad
+  const bottom = h - vPad
+  const scale =
+    o.barThicknessScale !== undefined && o.barThicknessScale !== null
+      ? (o.barThicknessScale as number)
+      : 1
+  const tw = Math.max(0.5, barW * scale)
+
   for (let col = 0; col < cols; col++) {
     const x = offsetX + col * (barW + gapX)
     const anchor = (o.anchorInterval as number) > 0 && col % (o.anchorInterval as number) === 0
@@ -214,11 +239,10 @@ function drawWaveformBars(
         (o.phaseOffset as number) +
         stagger +
         t * (o.speed as number)
-      const base =
-        (o.minHeight as number) +
-        (((wave(phase, o.waveType as string) * (o.waveAmplitude as number) + 1) / 2) *
-          (F - (o.minHeight as number)))
-      barH = Math.max(o.minHeight as number, base + (rnd() - 0.5) * 2)
+      const n =
+        (wave(phase, o.waveType as string) * (o.waveAmplitude as number) + 1) / 2
+      const base = (o.minHeight as number) + (1 - n) * (F - (o.minHeight as number))
+      barH = Math.max(o.minHeight as number, base)
     }
     let y0 = vPad + ((o.topAligned as boolean) ? 0 : (innerH - barH) / 2)
     if (!anchor && (o.verticalShift as number) !== 0) {
@@ -237,10 +261,12 @@ function drawWaveformBars(
         (o.shiftCurve as number) >= 0 ? Math.pow(i, s) : 1 - Math.pow(1 - i, s)
       y0 += maxd * (o.verticalShift as number) * factor
     }
-    y0 = Math.max(vPad, Math.min(y0, h - vPad - (o.minHeight as number)))
-    barH = Math.min(barH, h - vPad - y0)
+    barH = Math.min(barH, Math.max(0, bottom - y0))
+    y0 = Math.max(vPad, Math.min(y0, bottom - barH))
+    barH = Math.min(barH, Math.max(0, bottom - y0))
     if (barH < (o.minHeight as number)) continue
-    drawRect(ctx, x, y0, barW, barH, fg)
+    const xb = x + (barW - tw) / 2
+    drawRect(ctx, xb, y0, tw, barH, fg)
   }
 }
 
@@ -256,10 +282,9 @@ function drawGridBlocks(
 ) {
   const rnd = createSeededRandom(seed)
   clearCanvas(ctx, w, h, bg)
+  const presetInset = o.inset as number | undefined
   const inset =
-    o.inset !== undefined
-      ? (o.inset as number)
-      : Math.max(3, Math.min(10, Math.min(w, h) * 0.04))
+    presetInset !== undefined && presetInset > 0 ? presetInset : artFramePadding(w, h)
   const iw = Math.max(1, w - 2 * inset)
   const ih = Math.max(1, h - 2 * inset)
   const cellH = Math.max(o.itemHeight as number, Math.min(16, ih * 0.13))
@@ -313,8 +338,9 @@ function drawNoiseLines(
 ) {
   const rnd = createSeededRandom(seed)
   clearCanvas(ctx, w, h, bg)
-  const vm = Math.max(4, Math.min(12, h * 0.07))
+  const vm = artFramePadding(w, h)
   const innerH = h - 2 * vm
+  const innerW = Math.max(1, w - 2 * vm)
   const pad = vm + Math.max(0, (innerH - (o.rows as number) * ((o.maxThickness as number) + (o.gapY as number))) / 2)
   ctx.fillStyle = fg
   for (let row = 0; row < (o.rows as number); row++) {
@@ -324,8 +350,8 @@ function drawNoiseLines(
       (o.baseThickness as number) + n * ((o.maxThickness as number) - (o.baseThickness as number))
     const u = 1 - 0.8 * n
     for (let s = 0; s < 100; s++) {
-      const x0 = (s / 100) * w
-      const segW = w / 100 + 1
+      const x0 = vm + (s / 100) * innerW
+      const segW = innerW / 100 + 1
       const g = s / 100
       let vthick = o.baseThickness as number
       if (g > u) vthick = (o.baseThickness as number) + ((g - u) / (1 - u)) * (thick - (o.baseThickness as number))
@@ -353,12 +379,15 @@ function drawFluidGrid(
 ) {
   const rnd = createSeededRandom(seed)
   clearCanvas(ctx, w, h, bg)
+  const pad = artFramePadding(w, h)
+  const innerW = Math.max(1, w - 2 * pad)
+  const innerH = Math.max(1, h - 2 * pad)
   const rows = o.rows as number
   const colsN = o.cols as number
   const gapX = o.gapX as number
   const gapY = o.gapY as number
-  const itemH = Math.max(12, Math.min(22, (h - (rows - 1) * gapY) / rows))
-  const padY = (h - (rows * (itemH + gapY) - gapY)) / 2
+  const itemH = Math.max(12, Math.min(22, (innerH - (rows - 1) * gapY) / rows))
+  const padY = pad + (innerH - (rows * (itemH + gapY) - gapY)) / 2
   for (let row = 0; row < rows; row++) {
     const y = padY + row * (itemH + gapY)
     const stagger = row * (o.stagger as number)
@@ -380,9 +409,9 @@ function drawFluidGrid(
     }
     const totalGap = (colsN - 1) * gapX
     const sumW = widths.reduce((a, b) => a + b, 0)
-    const avail = Math.max(0.001, w - totalGap)
+    const avail = Math.max(0.001, innerW - totalGap)
     const scale = avail / sumW
-    let x = 0
+    let x = pad
     for (let c = 0; c < colsN; c++) {
       const bw = widths[c] * scale
       drawRect(ctx, x, y, bw, itemH, fg)
@@ -401,7 +430,10 @@ function drawInterfaceBlueprint(
   o: Record<string, number | boolean>,
 ) {
   clearCanvas(ctx, w, h, bg)
-  const u = Math.max(7, Math.min(14, ((o.gridSize as number) * Math.min(w, h)) / 120))
+  const u = Math.max(
+    artFramePadding(w, h),
+    Math.max(7, Math.min(14, ((o.gridSize as number) * Math.min(w, h)) / 120)),
+  )
   const lineW = Math.max(0.55, Math.min(1.35, (o.strokeWidth as number) * (Math.min(w, h) / 120)))
   ctx.strokeStyle = fg
   ctx.lineWidth = lineW
