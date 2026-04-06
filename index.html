@@ -58,44 +58,7 @@ body {
   user-select: none;
 }
 
-/* ── Header ─────────────────────────────── */
-header {
-  width: 100%;
-  padding: 20px 28px;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  flex-shrink: 0;
-  position: relative;
-  z-index: 10;
-}
-
-.logo {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 2.5px;
-  width: 27px;
-  height: 27px;
-}
-.logo b { display: block; border-radius: 3px; }
-.logo b:nth-child(1) { background: rgb(229, 79, 16); }
-.logo b:nth-child(2) { background: rgb(246, 235, 217); box-shadow: inset 0 0 0 1px rgba(0,0,0,0.08); }
-.logo b:nth-child(3) { background: rgb(83, 243, 153); }
-.logo b:nth-child(4) { background: rgb(10, 144, 210); }
-
-.btn-login {
-  background: transparent;
-  border: 1px solid rgba(255,255,255,0.16);
-  color: rgba(255,255,255,0.75);
-  padding: 7px 15px;
-  border-radius: 8px;
-  font: 13.5px/1 'DM Sans', sans-serif;
-  cursor: pointer;
-  transition: border-color .2s, background .2s, color .2s;
-}
-.btn-login:hover { border-color: rgba(255,255,255,0.3); background: rgba(255,255,255,0.05); color: #fff; }
-
-/* ── Main: hero + cards vertically centered as one block (fills viewport below header) ─ */
+/* ── Main: hero + cards vertically centered as one block ─ */
 .main {
   flex: 1;
   display: flex;
@@ -411,23 +374,9 @@ header {
   padding-bottom: calc(var(--pad) + 34px);
 }
 
-/* Tailwind layout demo: isolate from fan cards */
-.tw-layout-demo {
-  width: 100%;
-  display: flex;
-  justify-content: center;
-  padding: 32px 16px 48px;
-  flex-shrink: 0;
-}
-
 </style>
 </head>
 <body>
-
-<header>
-  <div class="logo"><b></b><b></b><b></b><b></b></div>
-  <button class="btn-login">Login</button>
-</header>
 
 <main class="main">
   <div class="hero">
@@ -439,19 +388,6 @@ header {
       <div class="stage" id="stage"></div>
     </div>
   </div>
-
-  <!--
-    Mirrors fan card: 228×288 shell; art strip flush to top and sides (card overflow clips corners).
-  -->
-  <section class="tw-layout-demo select-none" aria-label="Canvas layout reference">
-    <div
-      class="relative h-[288px] w-[228px] cursor-pointer overflow-hidden rounded-2xl bg-white p-0 shadow-none ring-1 ring-white/10 transition-transform duration-300 ease-out will-change-transform [transform:translateZ(0)] hover:scale-[1.012] active:scale-[0.988] focus:outline-none focus-visible:ring-2 focus-visible:ring-white/25"
-    >
-      <div class="pointer-events-none absolute inset-x-0 top-0 h-[145px] w-full overflow-hidden px-0 py-0">
-        <canvas id="layoutDemoCanvas" class="pointer-events-none block h-full w-full select-none"></canvas>
-      </div>
-    </div>
-  </section>
 
   <!-- Stack: React + Framer Motion + Tailwind (source: card-stack-hero/src) -->
   <div id="card-stack-root" class="w-full flex-shrink-0"></div>
@@ -996,65 +932,6 @@ function tick(now) {
   raf = requestAnimationFrame(tick);
 }
 raf = requestAnimationFrame(tick);
-
-// ── Tailwind layout demo: matches padded fan art viewport; 1.5× backing store + rAF ─
-(function layoutDemoCanvas() {
-  const canvas = document.getElementById('layoutDemoCanvas');
-  if (!canvas) return;
-  const RETINA_SCALE = 1.5;
-  const ctx = canvas.getContext('2d');
-  if (!ctx) return;
-
-  let cssW = 160;
-  let cssH = 118;
-
-  function syncBackingStore() {
-    const w = Math.max(1, Math.round(canvas.clientWidth));
-    const h = Math.max(1, Math.round(canvas.clientHeight));
-    if (w === cssW && h === cssH && canvas.width > 0) return;
-    cssW = w;
-    cssH = h;
-    canvas.width = Math.round(cssW * RETINA_SCALE);
-    canvas.height = Math.round(cssH * RETINA_SCALE);
-    canvas.style.width = `${cssW}px`;
-    canvas.style.height = `${cssH}px`;
-    ctx.setTransform(RETINA_SCALE, 0, 0, RETINA_SCALE, 0, 0);
-  }
-
-  const ro = new ResizeObserver(() => syncBackingStore());
-  ro.observe(canvas.parentElement || canvas);
-
-  const BG = 'rgb(229, 79, 16)';
-  const FG = 'rgba(255, 255, 194, 0.92)';
-  const t0 = performance.now();
-
-  function draw(sec) {
-    syncBackingStore();
-    if (cssW < 8 || cssH < 8) return;
-    ctx.fillStyle = BG;
-    ctx.fillRect(0, 0, cssW, cssH);
-    const barW = 2;
-    const gapBase = 3;
-    const cols = Math.max(12, Math.floor((cssW + gapBase) / (barW + gapBase)));
-    const gapX = cols > 1 ? (cssW - cols * barW) / (cols - 1) : gapBase;
-    const x0 = 0;
-    const vm = Math.max(2, cssH * 0.04);
-    const innerH = Math.max(1, cssH - 2 * vm);
-    const maxH = innerH * 0.82;
-    for (let i = 0; i < cols; i++) {
-      const ph = (i / cols) * Math.PI * 2 + sec * 0.9;
-      const bh = 4 + (Math.sin(ph) * 0.4 + 1) * 0.5 * (maxH - 4);
-      ctx.fillStyle = FG;
-      ctx.fillRect(x0 + i * (barW + gapX), cssH - vm - bh, barW, bh);
-    }
-  }
-
-  function frame(now) {
-    draw((now - t0) / 1000);
-    requestAnimationFrame(frame);
-  }
-  requestAnimationFrame(frame);
-})();
 
 window.drawGraphic = drawGraphic;
 </script>
