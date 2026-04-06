@@ -1,0 +1,19 @@
+# Local IDE / agent (paths, machine-specific)
+.claude/
+
+# Stray build chunks at repo root (if any)
+/chunk-*.js
+
+# Dependencies
+node_modules/
+
+# Build caches
+**/.vite/
+dist/
+
+# OS / editor
+.DS_Store
+Thumbs.db
+*.log
+.env
+.env.*

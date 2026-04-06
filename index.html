@@ -1,0 +1,1062 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Animation</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<script>
+  tailwind.config = {
+    corePlugins: { preflight: false },
+  };
+</script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="card-stack-hero/dist-embed/card-stack.css" />
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --orange: #E04E10;
+  --cream:  #F0E8D8;
+  --blue:   #4B8EF8;
+  --green:  #52EF96;
+  --dark:   #181818;
+  --bg:     #0B0B0B;
+  /* Card typography: Signifier (serif titles) + system UI (body / links) */
+  --font-card-serif: 'Signifier', Georgia, 'Times New Roman', serif;
+  --font-card-sans: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+}
+
+/* Custom Signifier (place licensed .woff2 next to this page under fonts/, or rely on local install) */
+@font-face {
+  font-family: 'Signifier';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: local('Signifier'), local('Signifier Regular'),
+       url('fonts/Signifier-Regular.woff2') format('woff2');
+}
+
+html { width: 100%; height: 100%; }
+html, body {
+  width: 100%;
+  min-height: 100%;
+  overflow-x: hidden;
+}
+
+body {
+  background: var(--bg);
+  color: #fff;
+  font-family: 'DM Sans', system-ui, sans-serif;
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  min-height: 100dvh;
+  overflow-y: auto;
+  user-select: none;
+}
+
+/* ── Header ─────────────────────────────── */
+header {
+  width: 100%;
+  padding: 20px 28px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-shrink: 0;
+  position: relative;
+  z-index: 10;
+}
+
+.logo {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 2.5px;
+  width: 27px;
+  height: 27px;
+}
+.logo b { display: block; border-radius: 3px; }
+.logo b:nth-child(1) { background: rgb(229, 79, 16); }
+.logo b:nth-child(2) { background: rgb(246, 235, 217); box-shadow: inset 0 0 0 1px rgba(0,0,0,0.08); }
+.logo b:nth-child(3) { background: rgb(83, 243, 153); }
+.logo b:nth-child(4) { background: rgb(10, 144, 210); }
+
+.btn-login {
+  background: transparent;
+  border: 1px solid rgba(255,255,255,0.16);
+  color: rgba(255,255,255,0.75);
+  padding: 7px 15px;
+  border-radius: 8px;
+  font: 13.5px/1 'DM Sans', sans-serif;
+  cursor: pointer;
+  transition: border-color .2s, background .2s, color .2s;
+}
+.btn-login:hover { border-color: rgba(255,255,255,0.3); background: rgba(255,255,255,0.05); color: #fff; }
+
+/* ── Main: hero + cards vertically centered as one block (fills viewport below header) ─ */
+.main {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: stretch;
+  gap: clamp(12px, 3vh, 32px);
+  min-height: 0;
+  width: 100%;
+}
+
+/* ── Hero ───────────────────────────────── */
+.hero {
+  text-align: center;
+  padding: clamp(16px, 2.5vh, 28px) 16px clamp(8px, 1.5vh, 14px);
+  flex-shrink: 0;
+  position: relative;
+  z-index: 10;
+}
+.hero-rule { width: 30px; height: 1px; background: rgba(255,255,255,0.22); margin: 0 auto 20px; }
+.hero h1 {
+  font-family: 'DM Serif Display', serif;
+  font-size: clamp(36px, 4.2vw, 50px);
+  font-weight: 400;
+  letter-spacing: -0.25px;
+  line-height: 1.08;
+  color: #fff;
+  margin-bottom: 14px;
+}
+.hero p {
+  font-size: 15px;
+  font-weight: 300;
+  color: rgba(255,255,255,0.42);
+  line-height: 1.65;
+  max-width: 285px;
+  margin: 0 auto;
+}
+
+/* ── Stage (sits under hero; main centers both together) ─ */
+.stage-wrap {
+  flex: 0 0 auto;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  padding: 0 16px 24px;
+  position: relative;
+  z-index: 1;
+}
+
+/*
+ * Scaled stage: layout box must match visual size (transform doesn’t shrink layout).
+ * --s scales the 940×575 artboard; outer box matches so flex centering stays correct.
+ */
+.stage-scale {
+  --s: min(1, (100vw - 32px) / 940px);
+  position: relative;
+  width: calc(940px * var(--s));
+  height: calc(575px * var(--s));
+  margin: 20px auto 0;
+  flex-shrink: 0;
+  overflow: visible;
+}
+
+.stage {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 940px;
+  height: 575px;
+  transform: scale(var(--s));
+  transform-origin: top left;
+  pointer-events: none;
+  overflow: visible;
+}
+
+/* ── Card wrapper (inspect: left/top 50%, origin center, translate+rotate+scale) ─ */
+.cw {
+  /* Idle fan scale: higher = larger cards on stage (pairs with .card --card-w/h) */
+  --ds: 0.84;
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform:
+    translate(-50%, -50%)
+    translateX(var(--tx, 0px))
+    translateY(var(--ty, 0px))
+    rotate(var(--rot, -4deg))
+    translateY(var(--dy, 0px))
+    scale(var(--ds));
+  transform-origin: center center;
+  will-change: transform, opacity, filter;
+  pointer-events: all;
+  cursor: pointer;
+  transition:
+    transform 0.52s cubic-bezier(0.34, 1.56, 0.64, 1),
+    opacity   0.36s cubic-bezier(0.4, 0, 0.2, 1),
+    filter    0.36s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.cw:not(.fan-dimmed):not(.fan-selected):hover { --dy: -12px; }
+
+.cw:focus {
+  outline: none;
+}
+.cw:focus-visible {
+  outline: 2px solid rgba(255, 255, 255, 0.5);
+  outline-offset: 5px;
+}
+
+.cw.fan-dimmed {
+  /* Slide down into tight deck below selected card */
+  --ty: calc(var(--ty-fan) + 185px) !important;
+  --dy: 0px !important;
+  --ds: 1.0 !important;
+  opacity: 1;
+  filter: none;
+  pointer-events: auto;
+}
+
+/* Fan focus: centered horizontally, lifted above center; peers drop down */
+.cw.fan-selected {
+  --tx: 0px !important;
+  --ty: -70px !important;
+  --rot: 0deg !important;
+  --ds: 1.0 !important;
+  --dy: 0px !important;
+}
+
+/* ── Fan card: shell clips; art lives in .artViewport; text in .cardContent (above art) ─ */
+/* Shell: padding: 0 — “gutter” is absolute .artViewport inset: left + top + right (= width calc(100% - 2*--pad)). */
+/* Reference: flat tiles (depth from overlap only) — no heavy outer drop shadow. */
+.card {
+  --card-w: 228px;
+  --card-h: 288px;
+  --pad: 24px;
+  --radius: 18px;
+  /* Vertical inset inside the art strip; horizontal is 0 so canvas aligns with .cardContent text */
+  --art-inset: 0px;
+  --art-strip-h: 145px;
+  --art-strip-h-selected: 245px;
+  width: var(--card-w);
+  height: var(--card-h);
+  padding: 0;
+  border-radius: var(--radius);
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  isolation: isolate;
+  font-family: var(--font-card-sans);
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.08);
+  transition:
+    box-shadow 0.3s ease,
+    width 0.52s cubic-bezier(0.34, 1.56, 0.64, 1),
+    height 0.52s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+.cw.fan-selected .card {
+  --card-w: 360px;
+  --card-h: 464px;
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.1);
+}
+.cw:not(.fan-dimmed):not(.fan-selected):hover .card {
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.12);
+}
+
+.artViewport {
+  position: absolute;
+  z-index: 1;
+  overflow: hidden;
+  pointer-events: none;
+  transition:
+    left 0.52s cubic-bezier(0.34, 1.56, 0.64, 1),
+    top 0.52s cubic-bezier(0.34, 1.56, 0.64, 1),
+    right 0.52s cubic-bezier(0.34, 1.56, 0.64, 1),
+    bottom 0.52s cubic-bezier(0.34, 1.56, 0.64, 1),
+    height 0.52s cubic-bezier(0.34, 1.56, 0.64, 1),
+    border-radius 0.45s ease,
+    clip-path 0.45s ease,
+    opacity 0.45s ease;
+}
+/* Top band: edge-to-edge, card overflow:hidden clips to card border-radius */
+.card .artViewport {
+  left: 0;
+  top: 0;
+  right: 0;
+  width: auto;
+  bottom: auto;
+  height: var(--art-strip-h);
+  margin: 0;
+  padding: 0;
+  border-radius: 0;
+  clip-path: none;
+  opacity: 1;
+}
+.cw.fan-selected .card .artViewport {
+  left: 0;
+  top: 0;
+  right: 0;
+  width: auto;
+  bottom: auto;
+  height: var(--art-strip-h-selected);
+  margin: 0;
+  padding: 0;
+  border-radius: 0;
+  clip-path: none;
+}
+.artViewport canvas {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+.cardContent {
+  position: relative;
+  z-index: 2;
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  padding: var(--pad) var(--pad) calc(var(--pad) + 10px);
+  transition: padding 0.52s cubic-bezier(0.34, 1.56, 0.64, 1);
+  isolation: isolate;
+}
+/* Text protection: scrim behind title — opaque at bottom, fades out upward (avoids transparent “holes” to the page) */
+.card .cardContent::before {
+  content: "";
+  position: absolute;
+  left: -6px;
+  right: -6px;
+  bottom: -4px;
+  top: 38%;
+  z-index: 0;
+  pointer-events: none;
+  background: linear-gradient(
+    to top,
+    rgba(var(--card-rgb), 0.9) 0%,
+    rgba(var(--card-rgb), 0.45) 42%,
+    rgba(var(--card-rgb), 0) 100%
+  );
+  border-radius: 0 0 10px 10px;
+}
+.card .cardContent > * {
+  position: relative;
+  z-index: 1;
+}
+.cw.fan-selected .card .cardContent {
+  justify-content: flex-start;
+  padding-top: calc(var(--art-strip-h-selected) + 18px);
+}
+
+.card-detail {
+  max-height: 0;
+  opacity: 0;
+  overflow: hidden;
+  margin: 0;
+  transition: all 0.52s cubic-bezier(0.34, 1.56, 0.64, 1);
+  pointer-events: none;
+}
+.cw.fan-selected .card-detail {
+  max-height: 220px;
+  opacity: 1;
+  margin-top: 12px;
+  pointer-events: auto;
+  user-select: text;
+}
+.card-detail__desc {
+  font-family: var(--font-card-sans);
+  font-size: 12.5px;
+  line-height: 1.5;
+  margin: 0;
+  font-weight: 400;
+}
+
+.card-label {
+  margin: 0;
+  padding-bottom: 4px;
+  font-family: var(--font-card-serif);
+  font-size: 32px;
+  font-weight: 400;
+  line-height: 1.07;
+  white-space: pre-line;
+  letter-spacing: -0.02em;
+  text-align: left;
+  transition: all 0.52s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+/* Fan idle: title pinned to bottom (grows upward for long lines) — matches stacked-card ref */
+.cw:not(.fan-selected) .card .card-label {
+  position: absolute;
+  left: 16px;
+  right: 16px;
+  bottom: 16px;
+  top: auto;
+  height: auto;
+  line-height: 1.1;
+  padding-bottom: 0;
+}
+.cw.fan-selected .card .card-label {
+  position: relative;
+  left: auto;
+  right: auto;
+  bottom: auto;
+  top: auto;
+  line-height: 1.07;
+  padding-bottom: 4px;
+}
+.cw.fan-selected .card-label {
+  text-shadow: 0 1px 12px rgba(0, 0, 0, 0.18);
+}
+
+.cw-4:not(.fan-selected) .cardContent {
+  padding-bottom: calc(var(--pad) + 34px);
+}
+
+/* Tailwind layout demo: isolate from fan cards */
+.tw-layout-demo {
+  width: 100%;
+  display: flex;
+  justify-content: center;
+  padding: 32px 16px 48px;
+  flex-shrink: 0;
+}
+
+</style>
+</head>
+<body>
+
+<header>
+  <div class="logo"><b></b><b></b><b></b><b></b></div>
+  <button class="btn-login">Login</button>
+</header>
+
+<main class="main">
+  <div class="hero">
+    <div class="hero-rule"></div>
+  </div>
+
+  <div class="stage-wrap">
+    <div class="stage-scale">
+      <div class="stage" id="stage"></div>
+    </div>
+  </div>
+
+  <!--
+    Mirrors fan card: 228×288 shell; art strip flush to top and sides (card overflow clips corners).
+  -->
+  <section class="tw-layout-demo select-none" aria-label="Canvas layout reference">
+    <div
+      class="relative h-[288px] w-[228px] cursor-pointer overflow-hidden rounded-2xl bg-white p-0 shadow-none ring-1 ring-white/10 transition-transform duration-300 ease-out will-change-transform [transform:translateZ(0)] hover:scale-[1.012] active:scale-[0.988] focus:outline-none focus-visible:ring-2 focus-visible:ring-white/25"
+    >
+      <div class="pointer-events-none absolute inset-x-0 top-0 h-[145px] w-full overflow-hidden px-0 py-0">
+        <canvas id="layoutDemoCanvas" class="pointer-events-none block h-full w-full select-none"></canvas>
+      </div>
+    </div>
+  </section>
+
+  <!-- Stack: React + Framer Motion + Tailwind (source: card-stack-hero/src) -->
+  <div id="card-stack-root" class="w-full flex-shrink-0"></div>
+</main>
+
+<script type="module" src="card-stack-hero/dist-embed/card-stack.js"></script>
+
+<script>
+const CARDS = [
+  {
+    title: 'Working\nKnowledge',
+    bg: '#E54F10',
+    fg: '#FFFFC2',
+    labelColor: '#FFFFC2',
+    textColor: '#FFFFC2',
+    descColor: 'rgba(255, 255, 194, 0.7)',
+    graphic: 'waveformBars',
+    seed: 12345,
+    tx: -399.3, ty: -161, rot: -8, zIndex: 1,
+    desc: 'Frameworks, principles, and models I\'ve learned and developed that you will be able to immediately apply to your practice.',
+  },
+  {
+    title: 'Practical\nDemonstration',
+    bg: '#F6EBD9',
+    fg: '#524733',
+    labelColor: '#524733',
+    textColor: '#524733',
+    descColor: 'rgba(82, 71, 51, 0.8)',
+    graphic: 'gridBlocks',
+    seed: 54321,
+    tx: -258.5, ty: -130, rot: 4, zIndex: 2,
+    desc: 'Detailed walkthroughs of designing interfaces, identifying opportunities, and improving through refinement.',
+  },
+  {
+    title: 'Collaborating\nwith AI',
+    bg: '#0A90D2',
+    fg: '#AEFFFF',
+    labelColor: '#AEFFFF',
+    textColor: '#AEFFFF',
+    descColor: 'rgba(174, 255, 255, 0.8)',
+    graphic: 'noiseLines',
+    seed: 11111,
+    tx: -121.4, ty: -193, rot: -2, zIndex: 3,
+    desc: 'Video lessons on practical, specific methods of working with AI to get exacting results. Tools covered include Claude Code and v0.',
+  },
+  {
+    title: 'Means &\nMethods',
+    bg: '#53F399',
+    fg: '#004D00',
+    labelColor: '#004D00',
+    textColor: '#004D00',
+    descColor: 'rgba(0, 77, 0, 0.7)',
+    graphic: 'fluidGrid',
+    seed: 22222,
+    tx: 12.1, ty: -134, rot: 1, zIndex: 4,
+    desc: 'General tips and techniques to apply to your daily work to achieve excellence in interface design and assembly.',
+  },
+  {
+    title: 'Interface Kit',
+    bg: '#211F1E',
+    fg: '#F6EBD9',
+    labelColor: '#F6EBD9',
+    textColor: '#F6EBD9',
+    descColor: 'rgba(246, 235, 217, 0.7)',
+    graphic: 'interfaceBlueprint',
+    seed: 33333,
+    tx: 160.1, ty: -170, rot: 5, zIndex: 5,
+    desc: 'Screencasts, highlights, and deep dives that showcase the end-to-end journey for designing and building Interface Kit. Members get early betas and free lifetime access to the tool.',
+  },
+];
+
+const FAN_TX_NUDGE = 114;
+
+function hexToRgbTriplet(hex) {
+  let h = String(hex).replace(/^#/, '');
+  if (h.length === 3) h = h.split('').map((ch) => ch + ch).join('');
+  const n = parseInt(h, 16);
+  if (Number.isNaN(n)) return '0, 0, 0';
+  return `${(n >> 16) & 255}, ${(n >> 8) & 255}, ${n & 255}`;
+}
+
+// ── Canvas core ───────────────────────────────────────────
+function setupCanvas(canvas, cssW, cssH) {
+  const ctx = canvas.getContext('2d');
+  if (!ctx) return null;
+  const dpr = window.devicePixelRatio || 1;
+  canvas.width = Math.max(1, Math.round(cssW * dpr));
+  canvas.height = Math.max(1, Math.round(cssH * dpr));
+  canvas.style.width = `${cssW}px`;
+  canvas.style.height = `${cssH}px`;
+  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  return { ctx, w: cssW, h: cssH, dpr };
+}
+
+function clearCanvas(ctx, w, h, bg) {
+  ctx.fillStyle = bg;
+  ctx.fillRect(0, 0, w, h);
+}
+
+function drawRect(ctx, x, y, rw, rh, color, alpha = 1) {
+  const a = ctx.globalAlpha;
+  ctx.globalAlpha = alpha;
+  ctx.fillStyle = color;
+  ctx.fillRect(x, y, rw, rh);
+  ctx.globalAlpha = a;
+}
+
+function createSeededRandom(seed) {
+  let t = seed >>> 0;
+  return function () {
+    t |= 0;
+    t = (t + 0x6d2b79f5) | 0;
+    let e = Math.imul(t ^ (t >>> 15), 1 | t);
+    e ^= e + Math.imul(e ^ (e >>> 7), 61 | e);
+    return ((e ^ (e >>> 14)) >>> 0) / 0x100000000;
+  };
+}
+
+function wave(t, type) {
+  const r = t % 1;
+  switch (type) {
+    case 'triangle':
+      if (r < 0.25) return 4 * r;
+      if (r < 0.75) return 1 - (r - 0.25) * 4;
+      return -1 + (r - 0.75) * 4;
+    case 'sawtooth':
+      return 2 * r - 1;
+    case 'square':
+      return r < 0.5 ? 1 : -1;
+    case 'bounce':
+      return Math.abs(Math.sin(r * Math.PI * 2));
+    case 'elastic': {
+      const n = Math.exp(-3 * r);
+      return Math.sin(r * Math.PI * 8) * n;
+    }
+    case 'sine':
+    default:
+      return Math.sin(r * Math.PI * 2);
+  }
+}
+
+function strokeRoundRect(ctx, x, y, rw, rh, radius, color, lineW, alpha = 1, inset = false) {
+  const a = ctx.globalAlpha;
+  ctx.globalAlpha = alpha;
+  ctx.strokeStyle = color;
+  ctx.lineWidth = lineW;
+  ctx.beginPath();
+  if (inset) {
+    const o = lineW / 2;
+    ctx.roundRect(x + o, y + o, rw - lineW, rh - lineW, Math.max(0, radius - o));
+  } else {
+    ctx.roundRect(x, y, rw, rh, radius);
+  }
+  ctx.stroke();
+  ctx.globalAlpha = a;
+}
+
+// ── Graphic presets (~180×120 fan viewport @ 24px inset on 228px card) ─
+const PRESETS = {
+  waveformBars: {
+    waveType: 'sine', waveAmplitude: 0.4, waveFrequency: 0.9, phaseOffset: 0.4,
+    columns: 80, barWidth: 2, gap: 3, minHeight: 1, maxHeightFrac: 0.82,
+    anchorInterval: 2, topAligned: true, stagger: 0.1, verticalShift: 4, shiftCurve: 3, shiftOrigin: 0.99,
+    speed: 0.1,
+  },
+  gridBlocks: {
+    waveType: 'elastic', waveAmplitude: 1, waveFrequency: 1, phaseOffset: 0.35,
+    itemWidth: 10, itemHeight: 10, gapX: 3, gapY: 3, opacityMin: 0, opacityMax: 1,
+    speed: 0.05, autoFit: true, inset: 0,
+  },
+  noiseLines: {
+    waveType: 'sine', waveAmplitude: 0.9, waveFrequency: 0.9, phaseOffset: 0.4,
+    rows: 24, baseThickness: 0.45, maxThickness: 3.2, gapY: 1.5, noiseAmount: 0,
+    speed: 0.2,
+  },
+  fluidGrid: {
+    waveType: 'elastic', waveAmplitude: 0.7, waveFrequency: 1, phaseOffset: 1,
+    rows: 9, cols: 80, minWidth: 2, maxWidth: 6, itemHeight: 16, gapX: 1, gapY: 2,
+    stagger: 0.12, speed: 0.05,
+  },
+  interfaceBlueprint: {
+    gridSize: 10, gridOpacity: 0.14, strokeWidth: 1.1, cornerRadius: 5, speed: 0.4, animated: true,
+  },
+};
+
+function drawWaveformBars(ctx, w, h, t, seed, fg, bg, o) {
+  const rnd = createSeededRandom(seed);
+  clearCanvas(ctx, w, h, bg);
+  const vPad = Math.max(2, h * 0.04);
+  const innerH = Math.max(1, h - 2 * vPad);
+  const F = o.maxHeightFrac * innerH;
+  const barW = o.barWidth;
+  const cols = Math.min(o.columns, Math.max(8, Math.floor((w + o.gap) / (barW + o.gap))));
+  const gapX = cols > 1 ? (w - cols * barW) / (cols - 1) : o.gap;
+  const offsetX = 0;
+  for (let col = 0; col < cols; col++) {
+    const x = offsetX + col * (barW + gapX);
+    const anchor = o.anchorInterval > 0 && col % o.anchorInterval === 0;
+    let barH;
+    if (anchor) barH = F;
+    else {
+      const stagger = (o.anchorInterval > 0 ? col % o.anchorInterval : col) * o.stagger;
+      const phase = (col / cols) * o.waveFrequency + o.phaseOffset + stagger + t * o.speed;
+      const base = o.minHeight + ((wave(phase, o.waveType) * o.waveAmplitude + 1) / 2) * (F - o.minHeight);
+      barH = Math.max(o.minHeight, base + (rnd() - 0.5) * 2);
+    }
+    let y0 = vPad + (o.topAligned ? 0 : (innerH - barH) / 2);
+    if (!anchor && o.verticalShift !== 0) {
+      const ti = o.anchorInterval > 0 ? Math.floor(col / o.anchorInterval) : col;
+      const r = o.anchorInterval > 0 ? Math.floor(cols / o.anchorInterval) : cols;
+      const center = o.shiftOrigin * (r - 1);
+      const dist = Math.abs(ti - center);
+      const maxd = Math.max(1, Math.max(center, r - 1 - center));
+      let i = dist / maxd;
+      const s = Math.abs(o.shiftCurve) || 1;
+      const factor = o.shiftCurve >= 0 ? Math.pow(i, s) : 1 - Math.pow(1 - i, s);
+      y0 += maxd * o.verticalShift * factor;
+    }
+    y0 = Math.max(vPad, Math.min(y0, h - vPad - o.minHeight));
+    barH = Math.min(barH, h - vPad - y0);
+    if (barH < o.minHeight) continue;
+    drawRect(ctx, x, y0, barW, barH, fg);
+  }
+}
+
+function drawGridBlocks(ctx, w, h, t, seed, fg, bg, o) {
+  const rnd = createSeededRandom(seed);
+  clearCanvas(ctx, w, h, bg);
+  const inset = o.inset !== undefined ? o.inset : Math.max(3, Math.min(10, Math.min(w, h) * 0.04));
+  const iw = Math.max(1, w - 2 * inset);
+  const ih = Math.max(1, h - 2 * inset);
+  const cellH = Math.max(o.itemHeight, Math.min(16, ih * 0.13));
+  const rows = o.autoFit ? Math.max(1, Math.floor((ih + o.gapY) / (cellH + o.gapY))) : o.rows;
+  const cols = o.autoFit ? Math.max(1, Math.floor((iw + o.gapX) / (o.itemWidth + o.gapX))) : o.cols;
+  const itemW = o.autoFit ? (iw - (cols - 1) * o.gapX) / cols : o.itemWidth;
+  const itemH = o.autoFit ? cellH : o.itemHeight;
+  const gridW = cols * itemW + (cols - 1) * o.gapX;
+  const gridH = rows * itemH + (rows - 1) * o.gapY;
+  const padX = inset + (o.autoFit ? (iw - gridW) / 2 : (iw - (cols * itemW + (cols - 1) * o.gapX)) / 2);
+  const padY = inset + (ih - gridH) / 2;
+  for (let row = 0; row < rows; row++) {
+    const y = padY + row * (itemH + o.gapY);
+    const rowPhase = o.phaseOffset * row;
+    for (let c = 0; c < cols; c++) {
+      const x = padX + c * (itemW + o.gapX);
+      const p = (cols > 1 ? c / (cols - 1) : 0) * o.waveFrequency + rowPhase + t * o.speed;
+      const op = o.opacityMin + (((wave(p, o.waveType) * o.waveAmplitude + 1) / 2 + 0.15 * rnd()) * (o.opacityMax - o.opacityMin));
+      drawRect(ctx, x, y, itemW, itemH, fg, Math.max(o.opacityMin, Math.min(o.opacityMax, op)));
+    }
+  }
+}
+
+function drawNoiseLines(ctx, w, h, t, seed, fg, bg, o) {
+  const rnd = createSeededRandom(seed);
+  clearCanvas(ctx, w, h, bg);
+  const vm = Math.max(4, Math.min(12, h * 0.07));
+  const innerH = h - 2 * vm;
+  const pad = vm + Math.max(0, (innerH - o.rows * (o.maxThickness + o.gapY)) / 2);
+  ctx.fillStyle = fg;
+  for (let row = 0; row < o.rows; row++) {
+    const n = o.rows > 1 ? row / (o.rows - 1) : 0;
+    const yBase = pad + row * (o.maxThickness + o.gapY);
+    const thick = o.baseThickness + n * (o.maxThickness - o.baseThickness);
+    const u = 1 - 0.8 * n;
+    for (let s = 0; s < 100; s++) {
+      const x0 = (s / 100) * w;
+      const segW = w / 100 + 1;
+      const g = s / 100;
+      let vthick = o.baseThickness;
+      if (g > u) vthick = o.baseThickness + ((g - u) / (1 - u)) * (thick - o.baseThickness);
+      const phase = (g + n) * o.waveFrequency + o.phaseOffset + t * o.speed;
+      const wy = wave(phase, o.waveType) * o.waveAmplitude * Math.min(3, innerH * 0.028);
+      const nx = (rnd() - 0.5) * o.noiseAmount * vthick;
+      const yy = Math.max(vm + vthick / 2, Math.min(h - vm - vthick / 2, yBase + wy + nx));
+      ctx.fillRect(x0, yy - vthick / 2, segW, vthick);
+    }
+  }
+}
+
+function drawFluidGrid(ctx, w, h, t, seed, fg, bg, o) {
+  const rnd = createSeededRandom(seed);
+  clearCanvas(ctx, w, h, bg);
+  const itemH = Math.max(12, Math.min(22, (h - (o.rows - 1) * o.gapY) / o.rows));
+  const padY = (h - (o.rows * (itemH + o.gapY) - o.gapY)) / 2;
+  for (let row = 0; row < o.rows; row++) {
+    const y = padY + row * (itemH + o.gapY);
+    const stagger = row * o.stagger;
+    const widths = [];
+    for (let c = 0; c < o.cols; c++) {
+      const phase = (c / o.cols) * o.waveFrequency + stagger + o.phaseOffset + t * o.speed;
+      let bw = o.minWidth + (0.5 + (((wave(phase, o.waveType) + 1) / 2 - 0.5) * o.waveAmplitude)) * (o.maxWidth - o.minWidth) + (rnd() - 0.5) * 0.5;
+      bw = Math.max(Math.max(0.5, o.minWidth), Math.min(o.maxWidth, bw));
+      widths.push(bw);
+    }
+    const totalGap = (o.cols - 1) * o.gapX;
+    const sumW = widths.reduce((a, b) => a + b, 0);
+    const avail = Math.max(0.001, w - totalGap);
+    const scale = avail / sumW;
+    let x = 0;
+    for (let c = 0; c < o.cols; c++) {
+      const bw = widths[c] * scale;
+      drawRect(ctx, x, y, bw, itemH, fg);
+      x += bw + o.gapX;
+    }
+  }
+}
+
+function drawInterfaceBlueprint(ctx, w, h, t, fg, bg, o) {
+    clearCanvas(ctx, w, h, bg);
+  const u = Math.max(7, Math.min(14, (o.gridSize * Math.min(w, h)) / 120));
+  const lineW = Math.max(0.55, Math.min(1.35, o.strokeWidth * (Math.min(w, h) / 120)));
+  ctx.strokeStyle = fg;
+  ctx.lineWidth = lineW;
+  ctx.globalAlpha = o.gridOpacity;
+  for (let x = 0; x <= w; x += u) {
+    ctx.beginPath();
+    ctx.moveTo(x, 0);
+    ctx.lineTo(x, h);
+    ctx.stroke();
+  }
+  for (let y = 0; y <= h; y += u) {
+    ctx.beginPath();
+    ctx.moveTo(0, y);
+    ctx.lineTo(w, y);
+    ctx.stroke();
+  }
+  ctx.globalAlpha = 1;
+
+  const snap = (v) => Math.round(v / u) * u;
+  const innerW = w - 2 * u;
+  const innerH = h - 2 * u;
+  strokeRoundRect(ctx, u, u, innerW, innerH, 2 * o.cornerRadius, fg, lineW, 0.4, true);
+
+  const b = u + u;
+  const bw0 = u + u;
+  const xInner = innerW - 2 * u;
+  const yInner = innerH - 2 * u;
+  const leftColW = snap(0.28 * xInner);
+  strokeRoundRect(ctx, b, bw0, leftColW, yInner, o.cornerRadius, fg, lineW, 0.6, true);
+
+  const k = b + leftColW + u;
+  const rightW = xInner - leftColW - u;
+  strokeRoundRect(ctx, k, bw0, rightW, yInner, o.cornerRadius, fg, lineW, 0.6, true);
+
+  const S = Math.max(u, snap((rightW - 2 * u - 2 * u) / 3));
+  const F = 2 * u;
+  const T = Math.max(u, yInner - 2 * F);
+  const E = bw0 + F;
+  const j = Math.max(S + u, 1);
+  const P = o.animated ? ((t * o.speed * 25) % j + j) % j : 0;
+
+  ctx.save();
+  ctx.beginPath();
+  ctx.roundRect(k + lineW, bw0 + lineW, rightW - 2 * lineW, yInner - 2 * lineW, o.cornerRadius - 1);
+  ctx.clip();
+
+  const I = k + u - P;
+  for (let i = 0; i < 5; i++) {
+    strokeRoundRect(ctx, I + i * j, E, S, T, o.cornerRadius - 1, fg, lineW, 0.5, true);
+  }
+  ctx.restore();
+}
+
+function drawGraphic(type, canvas, cssW, cssH, t, card) {
+  const setup = setupCanvas(canvas, cssW, cssH);
+  if (!setup) return;
+  const { ctx, w, h } = setup;
+  const fg = card.fg;
+  const bg = card.bg;
+  const seed = card.seed;
+  const o = { ...PRESETS[type] };
+
+  switch (type) {
+    case 'waveformBars':
+      drawWaveformBars(ctx, w, h, t, seed, fg, bg, o);
+      break;
+    case 'gridBlocks':
+      drawGridBlocks(ctx, w, h, t, seed, fg, bg, o);
+      break;
+    case 'noiseLines':
+      drawNoiseLines(ctx, w, h, t, seed, fg, bg, o);
+      break;
+    case 'fluidGrid':
+      drawFluidGrid(ctx, w, h, t, seed, fg, bg, o);
+      break;
+    case 'interfaceBlueprint':
+      drawInterfaceBlueprint(ctx, w, h, t, fg, bg, o);
+      break;
+    default:
+      clearCanvas(ctx, w, h, bg);
+  }
+}
+
+// ── Build fan cards (in-place focus only — no modal / overlay) ─
+const stage = document.getElementById('stage');
+const stageWrap = document.querySelector('.stage-wrap');
+const wrappers = [];
+const cardCanvases = [];
+
+let selectedFanIndex = null;
+
+function fanWrapperBaseStyle(c) {
+  const ty = c.ty;
+  return `--rot:${c.rot}deg;--tx:${c.tx + FAN_TX_NUDGE}px;--ty-fan:${ty}px;--ty:${ty}px;z-index:${c.zIndex};`;
+}
+
+function applyFanSelection() {
+  const dimmedIdxs = selectedFanIndex === null ? [] :
+    CARDS.map((_, j) => j).filter(j => j !== selectedFanIndex);
+  wrappers.forEach((w, i) => {
+    const c = CARDS[i];
+    w.classList.remove('fan-selected', 'fan-dimmed');
+    w.style.cssText = fanWrapperBaseStyle(c);
+    const expanded = selectedFanIndex === i;
+    const detailEl = w.querySelector('.card-detail');
+    w.setAttribute('aria-expanded', expanded ? 'true' : 'false');
+    if (detailEl) detailEl.setAttribute('aria-hidden', expanded ? 'false' : 'true');
+    if (selectedFanIndex === null) return;
+    if (i === selectedFanIndex) {
+      w.classList.add('fan-selected');
+    } else {
+      w.classList.add('fan-dimmed');
+      // Compress into tight bottom row
+      const pos = dimmedIdxs.indexOf(i);
+      const n = dimmedIdxs.length;
+      const spread = 120;
+      const tx = n > 1 ? -spread / 2 + (pos / (n - 1)) * spread : 0;
+      w.style.setProperty('--tx', Math.round(tx) + 'px');
+      w.style.setProperty('--ty-fan', '0px');   // uniform Y via CSS calc
+      w.style.setProperty('--rot', (CARDS[i].rot * 0.25).toFixed(1) + 'deg');
+    }
+  });
+}
+
+CARDS.forEach((c, i) => {
+  const headingId = `fan-card-heading-${i}`;
+  const detailId = `fan-card-detail-${i}`;
+
+  const wrap = document.createElement('div');
+  wrap.className = `cw cw-${i}`;
+  wrap.style.cssText = fanWrapperBaseStyle(c);
+  wrap.setAttribute('role', 'button');
+  wrap.setAttribute('tabindex', '0');
+  wrap.setAttribute('aria-expanded', 'false');
+  wrap.setAttribute('aria-labelledby', headingId);
+  wrap.setAttribute('aria-controls', detailId);
+
+  const card = document.createElement('div');
+  card.className = 'card';
+  card.style.background = c.bg;
+  card.style.setProperty('--card-rgb', hexToRgbTriplet(c.bg));
+  const artVp = document.createElement('div');
+  artVp.className = 'artViewport';
+  artVp.setAttribute('aria-hidden', 'true');
+  const cv = document.createElement('canvas');
+  artVp.appendChild(cv);
+
+  const content = document.createElement('div');
+  content.className = 'cardContent';
+
+  const label = document.createElement('h2');
+  label.className = 'card-label';
+  label.id = headingId;
+  label.textContent = c.title;
+  label.style.color = c.labelColor;
+
+  const detail = document.createElement('div');
+  detail.className = 'card-detail';
+  detail.id = detailId;
+  detail.setAttribute('role', 'region');
+  detail.setAttribute('aria-labelledby', headingId);
+  detail.setAttribute('aria-hidden', 'true');
+  const d = document.createElement('p');
+  d.className = 'card-detail__desc';
+  d.textContent = c.desc;
+  d.style.color = c.descColor;
+  detail.appendChild(d);
+
+  content.appendChild(label);
+  content.appendChild(detail);
+  card.appendChild(artVp);
+  card.appendChild(content);
+
+  const ro = new ResizeObserver(() => {
+    const w = Math.max(1, Math.round(artVp.clientWidth));
+    const h = Math.max(1, Math.round(artVp.clientHeight));
+    setupCanvas(cv, w, h);
+  });
+  ro.observe(artVp);
+
+  wrap.appendChild(card);
+  stage.appendChild(wrap);
+  wrappers.push(wrap);
+  cardCanvases.push({ canvas: cv, graphic: c.graphic, card: c });
+
+  function toggleFanCard() {
+    selectedFanIndex = selectedFanIndex === i ? null : i;
+    applyFanSelection();
+  }
+
+  wrap.addEventListener('click', (ev) => {
+    if (ev.target.closest('.card-detail')) return;
+    ev.stopPropagation();
+    toggleFanCard();
+  });
+
+  wrap.addEventListener('keydown', (ev) => {
+    if (ev.key === 'Enter' || ev.key === ' ') {
+      ev.preventDefault();
+      toggleFanCard();
+    }
+  });
+});
+
+if (stageWrap) {
+  document.addEventListener('click', (ev) => {
+    if (selectedFanIndex === null) return;
+    if (!stageWrap.contains(ev.target)) {
+      selectedFanIndex = null;
+      applyFanSelection();
+    }
+  });
+}
+
+document.addEventListener('keydown', (ev) => {
+  if (ev.key === 'Escape' && selectedFanIndex !== null) {
+    selectedFanIndex = null;
+    applyFanSelection();
+  }
+});
+
+let raf = 0;
+let t0 = performance.now();
+function tick(now) {
+  const t = (now - t0) / 1000;
+  for (const entry of cardCanvases) {
+    const cv = entry.canvas;
+    const w = Math.max(1, Math.round(cv.clientWidth));
+    const h = Math.max(1, Math.round(cv.clientHeight));
+    drawGraphic(entry.graphic, cv, w, h, t, entry.card);
+  }
+  raf = requestAnimationFrame(tick);
+}
+raf = requestAnimationFrame(tick);
+
+// ── Tailwind layout demo: matches padded fan art viewport; 1.5× backing store + rAF ─
+(function layoutDemoCanvas() {
+  const canvas = document.getElementById('layoutDemoCanvas');
+  if (!canvas) return;
+  const RETINA_SCALE = 1.5;
+  const ctx = canvas.getContext('2d');
+  if (!ctx) return;
+
+  let cssW = 160;
+  let cssH = 118;
+
+  function syncBackingStore() {
+    const w = Math.max(1, Math.round(canvas.clientWidth));
+    const h = Math.max(1, Math.round(canvas.clientHeight));
+    if (w === cssW && h === cssH && canvas.width > 0) return;
+    cssW = w;
+    cssH = h;
+    canvas.width = Math.round(cssW * RETINA_SCALE);
+    canvas.height = Math.round(cssH * RETINA_SCALE);
+    canvas.style.width = `${cssW}px`;
+    canvas.style.height = `${cssH}px`;
+    ctx.setTransform(RETINA_SCALE, 0, 0, RETINA_SCALE, 0, 0);
+  }
+
+  const ro = new ResizeObserver(() => syncBackingStore());
+  ro.observe(canvas.parentElement || canvas);
+
+  const BG = 'rgb(229, 79, 16)';
+  const FG = 'rgba(255, 255, 194, 0.92)';
+  const t0 = performance.now();
+
+  function draw(sec) {
+    syncBackingStore();
+    if (cssW < 8 || cssH < 8) return;
+    ctx.fillStyle = BG;
+    ctx.fillRect(0, 0, cssW, cssH);
+    const barW = 2;
+    const gapBase = 3;
+    const cols = Math.max(12, Math.floor((cssW + gapBase) / (barW + gapBase)));
+    const gapX = cols > 1 ? (cssW - cols * barW) / (cols - 1) : gapBase;
+    const x0 = 0;
+    const vm = Math.max(2, cssH * 0.04);
+    const innerH = Math.max(1, cssH - 2 * vm);
+    const maxH = innerH * 0.82;
+    for (let i = 0; i < cols; i++) {
+      const ph = (i / cols) * Math.PI * 2 + sec * 0.9;
+      const bh = 4 + (Math.sin(ph) * 0.4 + 1) * 0.5 * (maxH - 4);
+      ctx.fillStyle = FG;
+      ctx.fillRect(x0 + i * (barW + gapX), cssH - vm - bh, barW, bh);
+    }
+  }
+
+  function frame(now) {
+    draw((now - t0) / 1000);
+    requestAnimationFrame(frame);
+  }
+  requestAnimationFrame(frame);
+})();
+
+window.drawGraphic = drawGraphic;
+</script>
+</body>
+</html>
